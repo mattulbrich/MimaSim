@@ -288,6 +288,9 @@ void mima_micro_instruction_step(mima_t *mima)
         case LDV:
             mima_instruction_LDV(mima);
             break;
+        case LDIV:
+            mima_instruction_LDIV(mima);
+            break;
         case STV:
             mima_instruction_STV(mima);
             break;
@@ -509,6 +512,49 @@ void mima_instruction_LDV(mima_t *mima)
     case 12:
         log_trace("  LDV - %02d: empty", mima->processing_unit.MICRO_CYCLE);
         log_info("  LDV - ACC = 0x%08x", mima->processing_unit.ACC);
+        break;
+    default:
+        log_warn("Invalid micro cycle. Must be between 6-12, was %d :(\n", mima->processing_unit.MICRO_CYCLE);
+        assert(0);
+    }
+}
+
+
+void mima_instruction_LDIV(mima_t *mima)
+{
+    switch(mima->processing_unit.MICRO_CYCLE)
+    {
+    case 6:
+        mima->memory_unit.SAR = mima->control_unit.IR & 0xFFFFF;
+        mima_wasm_register_transfer(mima, SAR, IR, mima->control_unit.IR & 0x0FFFFFFF);
+        log_trace("  LDIV - %02d: IR & 0x0FFFFFFF -> SAR \t 0x%08x -> SAR \t\t I/O Read disposed", mima->processing_unit.MICRO_CYCLE, mima->control_unit.IR & 0x0FFFFFFF);
+        break;
+    case 7:
+        log_trace("  LDIV - %02d: empty \t\t\t\t\t\t\t I/O waiting...", mima->processing_unit.MICRO_CYCLE);
+        break;
+    case 8:
+        mima->memory_unit.SIR = mima->memory_unit.memory[mima->memory_unit.SAR];
+        mima_wasm_register_transfer(mima, SIR, MEMORY, mima->memory_unit.memory[mima->memory_unit.SAR]);
+        log_trace("  LDIV - %02d: mem[SAR] -> SIR \t\t mem[0x%08x] -> SIR \t I/O Read done", mima->processing_unit.MICRO_CYCLE, mima->memory_unit.SAR);
+        break;
+    case 9:
+        mima->memory_unit.SAR = mima->memory_unit.SIR & 0xFFFFF;
+        mima_wasm_register_transfer(mima, SAR, SIR, mima->memory_unit.SIR & 0xFFFFF);
+        log_trace("  LDIV - %02d: SIR -> SAR \t\t\t 0x%08x -> SAR", mima->processing_unit.MICRO_CYCLE, mima->memory_unit.SIR & 0xFFFFF);
+        break;
+    case 10:
+        log_trace("  LDIV - %02d: empty \t\t\t\t\t\t\t I/O waiting...", mima->processing_unit.MICRO_CYCLE);
+        break;
+    case 11:
+        mima->memory_unit.SIR = mima->memory_unit.memory[mima->memory_unit.SAR];
+        mima_wasm_register_transfer(mima, SIR, MEMORY, mima->memory_unit.memory[mima->memory_unit.SAR]);
+        log_trace("  LDIV - %02d: mem[SAR] -> SIR \t\t mem[0x%08x] -> SIR \t I/O Read done", mima->processing_unit.MICRO_CYCLE, mima->memory_unit.SAR);
+        break;    
+    case 12:
+        mima->processing_unit.ACC = mima->memory_unit.SIR;
+        mima_wasm_register_transfer(mima, ACC, SIR, mima->memory_unit.SIR);
+        log_trace("  LDV - %02d: SIR -> ACC \t\t\t 0x%08x -> ACC", mima->processing_unit.MICRO_CYCLE, mima->memory_unit.SIR);
+        log_info("  LDIV - ACC = 0x%08x", mima->processing_unit.ACC);
         break;
     default:
         log_warn("Invalid micro cycle. Must be between 6-12, was %d :(\n", mima->processing_unit.MICRO_CYCLE);
@@ -965,6 +1011,8 @@ const char *mima_get_instruction_name(mima_instruction_type op_code)
         return "OR ";
     case XOR:
         return "XOR";
+    case LDIV:
+        return "LDIV";
     case LDV:
         return "LDV";
     case STV:

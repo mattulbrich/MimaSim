@@ -78,6 +78,10 @@ mima_bool mima_string_to_op_code(const char *op_code_string, uint32_t *op_code)
     {
         op_code_result = LDV;
     }
+    else if (mima_string_starts_with_insensitive(op_code_string, "ldiv"))
+    {
+        op_code_result = LDIV;
+    }
     else if (mima_string_starts_with_insensitive(op_code_string, "stv"))
     {
         op_code_result = STV;

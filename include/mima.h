@@ -23,7 +23,7 @@ typedef uint8_t     mima_bool;
 
 typedef enum _mima_instruction_type
 {
-    ADD = 0, AND, OR, XOR, LDV, STV, LDC, JMP, JMN, EQL, HLT = 0xF0, NOT, RAR, RRN
+    ADD = 0, AND, OR, XOR, LDV, LDIV, STV, LDC, JMP, JMN, EQL, HLT = 0xF0, NOT, RAR, RRN
 } mima_instruction_type;
 
 typedef struct _mima_instruction
